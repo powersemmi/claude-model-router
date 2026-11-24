@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a problem with claude-mr
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug report. Please fill in the sections below so the problem can be
+        reproduced and fixed. Never paste a token, an API key, an OAuth client secret or the
+        content of your keyring entry: replace them with `<redacted>`.
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: >-
+        The `claude-mr` command line, the model you picked in Claude Code, and the steps that
+        trigger the problem.
+    validations:
+      required: true
+  - type: dropdown
+    id: backend
+    attributes:
+      label: Backend
+      description: Which route the request took (the `side=` field of the router's log line).
+      options:
+        - google (Gemini through Antigravity)
+        - local (local model server)
+        - anthropic (api.anthropic.com)
+        - startup, before any request
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: "`claude-mr --version` or the commit, `claude --version`, and `agy --version` for a Google problem."
+      placeholder: "claude-mr 0.1.0, Claude Code 2.1.331, agy 1.5.16"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: "Arch Linux, x86_64"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Router output
+      description: The router's stderr with `-v`, around the failing request. Redact secrets.
+      render: shell
+    validations:
+      required: false

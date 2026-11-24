@@ -1,0 +1,138 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    # A draft runs nothing until it is marked ready for review, which is what
+    # `ready_for_review` is here for.
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+# No debug info: no step reads it, and it is most of the size of every linked test binary. A
+# failing test still reports the file and line of its panic.
+env:
+  CARGO_PROFILE_DEV_DEBUG: "0"
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and checks
+    # Every other job needs this one, so the draft gate lives here: a skipped gate skips them all.
+    if: >-
+      github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Dependency-graph gate: RustSec advisories, license allow-list, duplicate versions and
+      # registry sources, per the checked-in deny.toml. Advisories arrive over time, so it runs
+      # on every change.
+      - name: cargo deny
+        uses: EmbarkStudios/cargo-deny-action@v2
+
+      - name: Install Rust toolchain
+        if: "!cancelled()"
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo
+        if: "!cancelled()"
+        uses: Swatinem/rust-cache@v2
+        with:
+          # Saved from main only: a pull request reuses main's cache and never replaces it.
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      # Each check runs whatever the one before it did, so a red formatting step hides no later
+      # verdict.
+      - name: cargo fmt
+        if: "!cancelled()"
+        run: cargo fmt --all -- --check
+
+      - name: cargo clippy
+        if: "!cancelled()"
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+  test:
+    name: Build and test
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: cargo test
+        run: cargo test --locked
+
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    needs: lint
+    # After the lint job, and only when it passed. Neither language needs a build: Rust is
+    # extracted from source, and `actions` reads the workflows.
+    if: needs.lint.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, rust]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
+
+  result:
+    name: CI result
+    # The one check the `main` ruleset requires: it speaks for every job above, so a job that
+    # comes, goes or is renamed never touches the ruleset. Skipped counts as passed, anything
+    # else fails. A draft skips it with the rest, and the run that marking it ready starts
+    # reports again.
+    needs:
+      - lint
+      - test
+      - codeql
+    if: >-
+      always()
+      && (github.event_name != 'pull_request' || !github.event.pull_request.draft)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) exit 1 ;;
+            esac
+          done

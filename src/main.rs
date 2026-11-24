@@ -34,7 +34,11 @@ const GOOGLE_MODELS: [&str; 4] = [
 ];
 
 #[derive(Parser)]
-#[command(about = "Route Claude Code's API calls by model name")]
+#[command(
+    name = "claude-mr",
+    version,
+    about = "Route Claude Code's API calls by model name"
+)]
 struct Cli {
     /// Port to listen on (127.0.0.1 only); 0 picks a free one.
     #[arg(long, default_value_t = 8787)]

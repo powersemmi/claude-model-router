@@ -31,9 +31,11 @@ use tokio::time::timeout;
 const LIMIT: Duration = Duration::from_secs(8);
 const LOCAL_MODEL: &str = "local-test-model";
 
-type TB = BoxBody<Bytes, Infallible>;
+type TestBody = BoxBody<Bytes, Infallible>;
 type Handler = Arc<
-    dyn Fn(Request<Incoming>) -> Pin<Box<dyn Future<Output = Response<TB>> + Send>> + Send + Sync,
+    dyn Fn(Request<Incoming>) -> Pin<Box<dyn Future<Output = Response<TestBody>> + Send>>
+        + Send
+        + Sync,
 >;
 
 struct Seen {
@@ -45,7 +47,7 @@ struct Seen {
 
 type Log = Arc<Mutex<Vec<Seen>>>;
 
-fn full(s: &'static str) -> TB {
+fn full(s: &'static str) -> TestBody {
     Full::new(Bytes::from_static(s.as_bytes())).boxed()
 }
 

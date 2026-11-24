@@ -1,0 +1,45 @@
+# cargo-deny configuration: RustSec advisories, license compatibility, duplicate versions and
+# registry sources of the shipped binary's dependency graph. Run locally with
+# `cargo deny check`.
+
+[graph]
+# The binary ships for Linux; other platforms' dependency trees stay out.
+targets = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
+# Gate what ships in `claude-mr`, not the test harness: dev-dependencies and their transitive
+# trees stay out.
+exclude-dev = true
+
+[advisories]
+yanked = "deny"
+
+[licenses]
+# Licenses compatible with shipping an MIT binary.
+allow = [
+    "Apache-2.0",
+    "MIT",
+    # rustls-webpki, and ring's BoringSSL-derived code.
+    "ISC",
+    # subtle, through rustls.
+    "BSD-3-Clause",
+    # unicode-ident is (MIT OR Apache-2.0) AND Unicode-3.0; the Unicode license covers the
+    # embedded character tables and is permissive.
+    "Unicode-3.0",
+    # webpki-roots: the Mozilla CA certificate list.
+    "CDLA-Permissive-2.0",
+    # option-ext, through dirs: file-level copyleft, which an unmodified dependency satisfies.
+    "MPL-2.0",
+]
+
+[bans]
+# Every crate in one version. A known unavoidable duplicate gets a targeted skip with the chain
+# that pulls it in.
+multiple-versions = "deny"
+skip = [
+    # ring 0.17 depends on getrandom 0.2 while uuid is on getrandom 0.4. Drop this skip once
+    # ring moves on.
+    { crate = "getrandom@0.2", reason = "ring 0.17 depends on getrandom 0.2" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

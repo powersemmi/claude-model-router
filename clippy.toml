@@ -1,0 +1,8 @@
+# Tests may unwrap: a failed test is the report.
+allow-unwrap-in-tests = true
+
+# A test may print what it inspects with dbg!.
+allow-dbg-in-tests = true
+
+# An acronym in a name is one capitalized word: `HttpClient`, not `HTTPClient`.
+upper-case-acronyms-aggressive = true

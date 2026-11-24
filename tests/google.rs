@@ -24,7 +24,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{mpsc, Notify};
 use tokio::time::timeout;
 
-use super::{read_until, recording, spawn_fake, ChanBody, Handler, Log, LIMIT, TB};
+use super::{read_until, recording, spawn_fake, ChanBody, Handler, Log, TestBody, LIMIT};
 
 const MODEL: &str = "gemini-4-neon-medium";
 
@@ -52,7 +52,7 @@ struct FakeGoogle {
     tokens: AtomicUsize,
 }
 
-fn sse_response(body: TB) -> Response<TB> {
+fn sse_response(body: TestBody) -> Response<TestBody> {
     Response::builder()
         .header("content-type", "text/event-stream")
         .body(body)
