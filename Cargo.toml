@@ -1,0 +1,44 @@
+[package]
+name = "claude-model-router"
+version = "0.1.0"
+edition = "2021"
+description = "Routes Claude Code API calls by model name: a local model server, Google Gemini or api.anthropic.com"
+license = "MIT"
+autotests = false
+
+[lib]
+name = "claude_model_router"
+path = "src/lib.rs"
+
+[[bin]]
+name = "claude-mr"
+path = "src/main.rs"
+
+[[test]]
+name = "suite"
+path = "tests/main.rs"
+
+[dependencies]
+bytes = "1"
+dirs = "6"
+clap = { version = "4", features = ["derive", "env"] }
+form_urlencoded = "1"
+http-body-util = "0.1"
+humantime = "2"
+hyper = { version = "1", features = ["http1", "http2", "server", "client"] }
+hyper-rustls = { version = "0.27", default-features = false, features = ["ring", "webpki-roots", "http1", "http2", "tls12"] }
+memchr = "2"
+hyper-util = { version = "0.1", features = ["tokio", "server-auto", "client-legacy", "http1", "http2"] }
+pin-project-lite = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "macros", "time", "sync", "process"] }
+uuid = { version = "1", features = ["v4"] }
+
+[profile.release]
+lto = "thin"
+strip = true
+codegen-units = 1
+
+[dev-dependencies]
+tempfile = "3"
