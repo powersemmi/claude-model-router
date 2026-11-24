@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-Security fixes ship in a new release of `claude-mr` from `main`. Only the newest release
-receives fixes; upgrading to it is the fix.
+Security fixes land on `main`. Only the latest `main` receives fixes; rebuilding from it
+(`cargo install --path .`) is the fix.
 
 ## Reporting a vulnerability
 
@@ -18,8 +18,8 @@ token, key or client secret in it with `<redacted>`.
 ## What happens next
 
 - The report is acknowledged within 7 days.
-- The fix is prepared in a private fork of the advisory and released.
-- The advisory is published on GitHub with the fixed version.
+- The fix is prepared in a private fork of the advisory and merged into `main`.
+- The advisory is published on GitHub with the fixing commit.
 - The reporter is credited in the advisory unless they ask otherwise.
 
 ## Scope
