@@ -20,7 +20,7 @@ path = "tests/main.rs"
 
 [dependencies]
 bytes = "1"
-dirs = "6"
+dirs = "7"
 clap = { version = "4", features = ["derive", "env"] }
 form_urlencoded = "1"
 http-body-util = "0.1"
